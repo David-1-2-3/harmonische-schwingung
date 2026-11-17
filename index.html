@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harmonische Schwingung</title>
+<meta name="description" content="Interaktiv: Federpendel und Fadenpendel mit Graphen von Auslenkung, Geschwindigkeit, Beschleunigung und Energie, und wie man die Schwingungsgleichung löst.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap">
+<script async src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+/* Same lab-bench layout as last week's turntable: stage left or on top, instrument panel beside or below. */
+:root {
+  --bg: #F6F5F9; --surface: #FFFFFF; --ink: #1C1928; --muted: #5F5A70; --line: #DFDBE8;
+  --accent: #5A3DC8; --accent-ink: #FFFFFF; --accent-soft: #EEE9FC; --focus: #5A3DC8;
+  --scrim: rgba(246, 245, 249, 0.86); --qr-bg: #FFFFFF; --qr-ink: #000000;
+
+  --floor: #EFEDF3; --grid: #E2DEEA; --grid2: #CBC5D8; --mark: #3A3550;
+  --halo: rgba(255, 255, 255, 0.9); --shadow: rgba(70, 45, 30, 0.28);
+  --track: #4A4560; --ground: #E2DFE8; --block: #9C9AA6; --blockedge: #6F6D7A;
+  --ball: #6748D3; --spring: #2F9E44; --equi: #A9A2BC;
+
+  --fext: #5A3DC8;   /* force we apply (crane, hand) */
+  --ffield: #E0102A; /* field force, red F_g as on the slides */
+  --pos: #13865A; --neg: #E06A00; --zero: #9C97AA;
+
+  --efeder: #2F9E44; --ekin: #E06A00; --epot: #2335E6; --heat: #C2255C;
+
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-math: "STIX Two Text", "Cambria Math", "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121019; --surface: #1C1926; --ink: #EDEAF5; --muted: #A39DB5; --line: #2E2A3B;
+    --accent: #A08BFF; --accent-ink: #120F1C; --accent-soft: #241E3A; --focus: #A08BFF;
+    --scrim: rgba(18, 16, 25, 0.86);
+    --floor: #17141F; --grid: #231F2C; --grid2: #3A3448; --mark: #D6D1E6;
+    --halo: rgba(18, 16, 25, 0.85); --shadow: rgba(0, 0, 0, 0.55);
+    --track: #C9C3DA; --ground: #221E2B; --block: #8B8996; --blockedge: #C2C0CA;
+    --ball: #A890FF; --spring: #5FD07A; --equi: #6B6480;
+    --fext: #A890FF; --ffield: #FF5468; --pos: #3FCB8C; --neg: #FF9A3D; --zero: #7D7790;
+    --efeder: #5FD07A; --ekin: #FF9A3D; --epot: #7F8CFF; --heat: #FF6FA2;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121019; --surface: #1C1926; --ink: #EDEAF5; --muted: #A39DB5; --line: #2E2A3B;
+  --accent: #A08BFF; --accent-ink: #120F1C; --accent-soft: #241E3A; --focus: #A08BFF;
+  --scrim: rgba(18, 16, 25, 0.86);
+  --floor: #17141F; --grid: #231F2C; --grid2: #3A3448; --mark: #D6D1E6;
+  --halo: rgba(18, 16, 25, 0.85); --shadow: rgba(0, 0, 0, 0.55);
+  --track: #C9C3DA; --ground: #221E2B; --block: #8B8996; --blockedge: #C2C0CA;
+  --ball: #A890FF; --spring: #5FD07A; --equi: #6B6480;
+  --fext: #A890FF; --ffield: #FF5468; --pos: #3FCB8C; --neg: #FF9A3D; --zero: #7D7790;
+  --efeder: #5FD07A; --ekin: #FF9A3D; --epot: #7F8CFF; --heat: #FF6FA2;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 40px; -webkit-text-size-adjust: 100%;
+}
+.app { max-width: 1240px; margin: 0 auto; display: grid; gap: 18px; }
+.app > *, .layout > * { min-width: 0; }
+
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.titles { min-width: 0; display: grid; gap: 4px; }
+.eyebrow { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 5.2vw, 44px); line-height: 1.02; letter-spacing: -0.015em; text-wrap: balance; }
+.lead { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+
+.layout { display: grid; gap: 22px; }
+@media (min-width: 960px) {
+  .layout { grid-template-columns: minmax(0, 1.4fr) minmax(330px, 1fr); align-items: start; }
+  .stage { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+}
+.stage { min-width: 0; display: grid; gap: 12px; }
+
+.frames {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 4px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+}
+.frames button {
+  appearance: none; border: 0; background: transparent; color: var(--ink);
+  border-radius: 10px; padding: 7px 4px; font: inherit; cursor: pointer;
+  display: grid; align-content: center; text-align: center; min-height: 54px;
+}
+.frames .k { font-family: var(--font-display); font-weight: 700; font-size: 17px; line-height: 1.15; }
+.frames .s { font-size: 12px; color: var(--muted); line-height: 1.25; }
+.frames button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.frames button[aria-selected="true"] .s { color: inherit; opacity: 0.85; }
+.frames button:not([aria-selected="true"]):hover { background: var(--accent-soft); }
+
+.view { margin: 0; min-width: 0; display: grid; gap: 6px; }
+.view figcaption { font-size: 13px; color: var(--muted); }
+canvas.sim { display: block; width: 100%; height: auto; border-radius: 16px; background: var(--floor); touch-action: none; }
+#cvW { aspect-ratio: 1 / 1; max-width: min(100%, max(300px, calc(100vh - 300px))); justify-self: center; cursor: crosshair; }
+#cvG { aspect-ratio: 3 / 1; min-height: 140px; touch-action: auto; }
+#cvE { aspect-ratio: 16 / 10; touch-action: auto; }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  appearance: none; font: inherit; font-weight: 700; font-size: 15px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  padding: 0 16px; min-height: 50px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
+}
+.btn svg { width: 18px; height: 18px; flex: none; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; flex: 1; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn.small { min-height: 40px; font-size: 14px; padding: 0 12px; }
+.btn.icon { width: 50px; padding: 0; }
+.btn:focus-visible, .frames button:focus-visible, .seg label:has(input:focus-visible),
+.chip:has(input:focus-visible), summary:focus-visible, input[type="range"]:focus-visible, input[type="url"]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px;
+}
+
+.panel { min-width: 0; display: grid; gap: 20px; }
+.explain { background: var(--accent-soft); border-radius: 16px; padding: 16px 18px 18px; display: grid; gap: 6px; }
+.pill { justify-self: start; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; background: var(--surface); color: var(--accent); }
+.pill[data-state="on"] { background: var(--accent); color: var(--accent-ink); }
+.pill[data-state="end"] { background: var(--ink); color: var(--bg); }
+.explain h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 23px; line-height: 1.15; text-wrap: balance; }
+.explain p { margin: 0; line-height: 1.75; }
+
+.group { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 12px; min-width: 0; }
+.group h3 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+.note { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+.m { font-family: var(--font-math); font-style: italic; white-space: nowrap; }
+.m sub { font-size: 0.68em; }
+.vec { position: relative; display: inline-block; }
+.vec::after { content: "\2192"; position: absolute; left: 55%; top: -0.62em; transform: translateX(-50%); font-size: 0.72em; font-style: normal; line-height: 1; }
+.t-ext { color: var(--fext); } .t-field { color: var(--ffield); } .t-pos { color: var(--pos); } .t-neg { color: var(--neg); }
+.t-f { color: var(--efeder); } .t-k { color: var(--ekin); } .t-p { color: var(--epot); } .t-q { color: var(--heat); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px 7px 10px; min-height: 42px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; user-select: none; font-size: 14px; }
+.chip input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.chip:has(input:checked) { border-color: var(--accent); }
+.chip:has(input:not(:checked)) { opacity: 0.5; }
+.chip:has(input:not(:checked)) .lbl { text-decoration: line-through; }
+
+.slider { display: grid; gap: 2px; }
+.slider .row { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.slider label, .slider .lab { font-weight: 700; }
+.slider output { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; }
+input[type="range"] { width: 100%; height: 34px; margin: 0; accent-color: var(--accent); }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); justify-self: start; }
+.seg label { position: relative; padding: 7px 12px; border-radius: 9px; cursor: pointer; font-size: 14px; font-variant-numeric: tabular-nums; }
+.seg input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.seg label:has(input:checked) { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.routes { display: grid; gap: 6px; }
+.routes .lab { font-size: 13px; color: var(--muted); }
+
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 6px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: baseline; }
+thead th { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+tbody th { text-align: left; font-weight: 400; }
+tbody th .u { color: var(--muted); font-size: 12px; margin-left: 4px; }
+td { font-family: var(--font-math); font-size: 16px; min-width: 64px; white-space: nowrap; }
+tr.hl td, tr.hl th { font-weight: 700; }
+.empty { color: var(--muted); font-size: 14px; margin: 0; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: 0; }
+
+.eq { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 10px; font-family: var(--font-math); font-size: 19px; line-height: 1.9; }
+.term { display: grid; justify-items: center; }
+.term small { font-family: var(--font-body); font-size: 12px; line-height: 1.3; color: var(--muted); text-align: center; }
+
+/* energy bar: always the full width of E_ges, only its split changes */
+.ebar { display: flex; height: 30px; border-radius: 10px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); }
+.ebar span { display: block; height: 100%; min-width: 0; }
+.ebar .b-f { background: var(--efeder); } .ebar .b-k { background: var(--ekin); }
+.ebar .b-p { background: var(--epot); } .ebar .b-q { background: var(--heat); }
+.elegend { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 4px 12px; font-size: 14px; }
+.elegend div { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; border-bottom: 1px solid var(--line); padding: 3px 0; }
+.elegend b { font-family: var(--font-math); font-weight: 400; font-size: 16px; font-variant-numeric: tabular-nums; }
+.elegend .sum { font-weight: 700; }
+
+details { border-bottom: 1px solid var(--line); padding: 4px 0 10px; }
+details:last-child { border-bottom: 0; }
+summary { cursor: pointer; font-weight: 700; padding: 6px 0; line-height: 1.7; }
+details p { margin: 4px 0 0; line-height: 1.75; }
+.foot { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.6; }
+
+.pages { display: flex; flex-wrap: wrap; gap: 6px; }
+.pages a { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px 0 6px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 700; }
+.pages .n { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-family: var(--font-display); font-size: 14px; }
+.pages a[aria-current="page"] { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
+.pages a[aria-current="page"] .n { background: var(--accent-ink); color: var(--accent); }
+.pages a:not([aria-current="page"]):hover { border-color: var(--accent); }
+.pages a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.qr-overlay { position: fixed; inset: 0; z-index: 50; background: var(--scrim); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: grid; place-items: center; overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.qr-box { width: min(100%, 520px); background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: grid; gap: 12px; box-shadow: 0 20px 60px var(--shadow); }
+.qr-box h2 { margin: 0; font-family: var(--font-display); font-size: 26px; }
+.qr-code { background: var(--qr-bg); color: var(--qr-ink); border-radius: 14px; padding: 10px; display: grid; place-items: center; width: min(100%, 64vh); justify-self: center; aspect-ratio: 1 / 1; }
+.qr-code canvas { width: 100%; height: auto; image-rendering: pixelated; display: block; }
+.qr-code p { margin: 0; padding: 16px; text-align: center; font-size: 14px; }
+.qr-url { font-size: 15px; word-break: break-all; text-align: center; margin: 0; color: var(--muted); }
+.qr-box label { font-weight: 700; font-size: 14px; }
+.qr-box input[type="url"] { width: 100%; font: inherit; font-size: 15px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.qr-row { display: flex; gap: 8px; justify-content: flex-end; }
+
+@media (max-width: 420px) {
+  .frames .k { font-size: 15px; } .frames .s { font-size: 11px; }
+  .btn { padding: 0 12px; } .eq { font-size: 17px; }
+  .seg label { padding: 6px 9px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+
+.stagewrap { position: relative; min-width: 0; }
+canvas.c3 { display: block; width: 100%; aspect-ratio: 16 / 10; border-radius: 16px; background: var(--floor); }
+.c3fail { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); font-size: 15px; }
+.viewbtns { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
+.viewbtns .btn { min-height: 34px; font-size: 13px; padding: 0 10px; background: var(--surface); }
+.hint { font-size: 13px; color: var(--muted); margin: 0; }
+/* ---------- the animation stays in view while the panel scrolls ---------- */
+.stage { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; background: var(--bg); padding-bottom: 10px; align-self: start; gap: 10px; }
+@media (min-width: 960px) { .stage { top: calc(env(safe-area-inset-top, 0px) + 12px); padding-bottom: 0; } }
+@media (max-width: 959px) {
+  .stage.flow { position: static; box-shadow: none; }
+  .stage { box-shadow: 0 10px 12px -12px var(--shadow); margin-inline: -4px; padding-inline: 4px; }
+  canvas.c3 { max-height: 40vh; }
+  .stage .frames button { min-height: 46px; padding: 4px; }
+  .stage .frames .s { display: none; }
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 20; }
+.ctrls { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; pointer-events: none; }
+.ctrls > * { pointer-events: auto; }
+.ctrls .btn { min-height: 42px; box-shadow: 0 4px 14px -6px var(--shadow); }
+.ctrls .btn.icon { width: 42px; border-radius: 999px; }
+.ctrls .btn.primary { flex: 0 1 auto; border-radius: 999px; padding: 0 18px; }
+.ctrls .btn:disabled { opacity: 0.45; }
+.stage .seg { max-width: 100%; }
+.subhead { margin: 4px 0 -4px; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.subhead .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.optnote { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.dblock { display: grid; gap: 10px; }
+.cols2 td { min-width: 70px; }
+@media (max-width: 959px) {
+  .pages { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .pages::-webkit-scrollbar { display: none; }
+  .pages a { flex: none; }
+}
+
+/* ---------- icon buttons on the animation ---------- */
+.ibtn { appearance: none; width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  display: inline-grid; place-items: center; cursor: pointer; padding: 0; box-shadow: 0 4px 14px -6px var(--shadow); }
+.ibtn svg { width: 20px; height: 20px; }
+.ibtn.big { width: 48px; height: 48px; background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.ibtn.big svg { width: 22px; height: 22px; }
+.ibtn:hover { border-color: var(--accent); }
+.ibtn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.viewbtns { gap: 6px; }
+.badge { font-size: 12px; padding: 3px 9px; }
+
+/* ---------- full screen ---------- */
+.stagewrap:fullscreen, .stagewrap.fs { background: var(--floor); display: block; }
+.stagewrap:-webkit-full-screen { background: var(--floor); display: block; }
+.stagewrap.fs { position: fixed; inset: 0; z-index: 100;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+.stagewrap:fullscreen canvas.c3, .stagewrap.fs canvas.c3 { width: 100%; height: 100%; max-height: none; aspect-ratio: auto; border-radius: 0; }
+.stagewrap:-webkit-full-screen canvas.c3 { width: 100%; height: 100%; max-height: none; aspect-ratio: auto; border-radius: 0; }
+.stagewrap.fs .viewbtns { top: calc(env(safe-area-inset-top, 0px) + 10px); right: calc(env(safe-area-inset-right, 0px) + 10px); }
+.stagewrap.fs .ctrls { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); left: calc(env(safe-area-inset-left, 0px) + 12px); }
+body.fs-open { overflow: hidden; }
+
+.explain { align-content: start; }
+
+/* phones: a compact header, so the animation starts high up */
+@media (max-width: 959px) {
+  body { padding-top: 10px; }
+  .app { gap: 10px; }
+  .top { align-items: center; }
+  h1 { font-size: 24px; }
+  .eyebrow { font-size: 11px; }
+  .lead { display: none; }
+  #qrBtn { min-height: 38px; padding: 0 10px; font-size: 13px; }
+}
+
+/* time derivatives: a dot (or two) above the letter */
+.dt, .dt2 { position: relative; display: inline-block; }
+.dt::after, .dt2::after { position: absolute; left: 55%; top: -0.32em; transform: translateX(-50%); font-style: normal; line-height: 1; }
+.dt::after { content: "\02D9"; }
+.dt2::after { content: "\00A8"; }
+
+/* ---------- Übung 10 ---------- */
+:root { --cx: #5A3DC8; --cv: #1E9E95; --ca: #C2255C; --cF: #E8772E; --rope: #4E8A5E; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --cx: #A890FF; --cv: #3CC9BE; --ca: #FF6FA2; --cF: #FF9A3D; --rope: #7CC48E; }
+}
+:root[data-theme="dark"] { --cx: #A890FF; --cv: #3CC9BE; --ca: #FF6FA2; --cF: #FF9A3D; --rope: #7CC48E; }
+.t-cx { color: var(--cx); } .t-cv { color: var(--cv); } .t-ca { color: var(--ca); } .t-cF { color: var(--cF); }
+.t-ek { color: var(--ekin); } .t-ep { color: var(--epot); }
+
+canvas.osc { aspect-ratio: 16 / 10; }
+@media (max-width: 959px) { canvas.osc { aspect-ratio: 4 / 3; max-height: 44vh; } }
+
+/* choose the quantity in the graph: small symbol buttons on the canvas */
+.gsel { position: absolute; top: 10px; left: 40%; display: flex; gap: 2px; padding: 3px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 999px; box-shadow: 0 4px 14px -6px var(--shadow); }
+.gsel button { appearance: none; border: 0; background: transparent; color: var(--ink); font-family: var(--font-math); font-style: italic; font-size: 17px;
+  min-width: 34px; height: 32px; padding: 0 8px; border-radius: 999px; cursor: pointer; line-height: 1; }
+.gsel button[aria-checked="true"] { background: var(--accent); color: var(--accent-ink); }
+.gsel button:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+.gsel .e { font-style: normal; font-family: var(--font-body); font-weight: 700; font-size: 14px; }
+
+/* damping scale under the slider: the critical point sits at δ/ω0 = 1, i.e. at 40 % of the track */
+.dscale { position: relative; height: 30px; margin: 0 9px; font-size: 12px; color: var(--muted); }
+.dscale::before { content: ""; position: absolute; left: 0; right: 0; top: 2px; height: 6px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent-soft) 0 40%, var(--grid2) 40% 100%); }
+.dscale .mk { position: absolute; left: 40%; top: 10px; transform: translateX(-50%); font-weight: 700; color: var(--ink); }
+.dscale .mk::before { content: ""; position: absolute; left: 50%; top: -12px; width: 2px; height: 12px; background: var(--ink); transform: translateX(-50%); }
+.dscale .z1 { position: absolute; left: 0; top: 10px; }
+.dscale .z3 { position: absolute; right: 0; top: 10px; }
+@media (max-width: 420px) { .dscale .z1, .dscale .z3 { font-size: 11px; } }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 4px 10px; align-items: start; }
+.step .num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 14px; margin-top: 2px; }
+.step > div { display: grid; gap: 6px; min-width: 0; }
+.step p { margin: 0; line-height: 1.7; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+
+/* here the buttons sit in the free band above the animation */
+.stagewrap .ctrls { top: 6px; bottom: auto; left: 8px; right: auto; }
+.stagewrap.fs .ctrls { top: calc(env(safe-area-inset-top, 0px) + 6px); bottom: auto; }
+.gsel { top: 10px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="titles">
+      <p class="eyebrow">Physik I · Übung 10</p>
+      <h1>Harmonische Schwingung</h1>
+      <p class="lead" id="lead"></p>
+    </div>
+    <button class="btn small" id="qrBtn" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm8-2h2v2h-2v-2zm2 2h2v2h-2v-2zm2-2h4v2h-2v2h-2v-4zm-4 4h2v4h-2v-4zm4 2h4v2h-4v-2zm2-2h2v2h-2v-2z"/></svg>
+      QR-Code
+    </button>
+  </header>
+
+  <main class="layout">
+    <section class="stage" aria-label="Animation und Graph">
+      <div class="frames" role="tablist" aria-label="Pendel wählen">
+        <button type="button" role="tab" data-mode="feder" aria-selected="true"><span class="k">Federpendel</span><span class="s"><span class="m">m <span class="dt2">x</span> = −D x</span></span></button>
+        <button type="button" role="tab" data-mode="faden" aria-selected="false"><span class="k">Fadenpendel</span><span class="s"><span class="m">m l <span class="dt2">φ</span> = −m g sin φ</span></span></button>
+      </div>
+      <div class="stagewrap">
+        <canvas class="c3 osc" id="cv" role="img" aria-label="Animation des Pendels und Graph über der Zeit"></canvas>
+        <div class="gsel" id="gsel" role="radiogroup" aria-label="Grösse im Graphen"></div>
+        <div class="viewbtns">
+          <button class="ibtn" type="button" id="fullBtn" data-full title="Vollbild" aria-label="Vollbild">
+            <svg class="i-full" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+            <svg class="i-exit" hidden viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+          </button>
+        </div>
+        <div class="ctrls">
+          <button class="ibtn big" type="button" id="playBtn" title="Pause" aria-label="Pause">
+            <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+            <svg class="i-play" hidden viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>
+          </button>
+          <button class="ibtn" type="button" id="resetBtn" title="Zurück zum Start" aria-label="Zurück zum Start">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="frames" role="tablist" aria-label="Inhalt wählen">
+        <button type="button" role="tab" data-ptab="main" aria-selected="true"><span class="k">Versuch</span><span class="s">Einstellungen und Fragen</span></button>
+        <button type="button" role="tab" data-ptab="dgl" aria-selected="false"><span class="k">DGL lösen</span><span class="s">Schritt für Schritt</span></button>
+      </div>
+
+      <div id="tabMain" class="panel">
+        <article class="explain" aria-live="polite">
+          <span class="pill" id="pill"></span>
+          <h2 id="eTitle"></h2>
+          <p id="eText"></p>
+        </article>
+
+        <section class="group" aria-labelledby="h-set">
+          <h3 id="h-set">Einstellungen</h3>
+          <div class="presets"><button class="btn small" type="button" id="defaults">Werte zurücksetzen</button></div>
+          <div id="setFeder" class="dblock">
+            <div class="slider"><div class="row"><label for="fm">Masse <span class="m">m</span></label><output id="fmOut"></output></div><input type="range" id="fm" min="0.1" max="1" step="0.05" value="0.5"></div>
+            <div class="slider"><div class="row"><label for="fD">Federkonstante <span class="m">D</span></label><output id="fDOut"></output></div><input type="range" id="fD" min="5" max="50" step="1" value="20"></div>
+            <div class="slider"><div class="row"><label for="fx0">Startauslenkung <span class="m">x(0)</span></label><output id="fx0Out"></output></div><input type="range" id="fx0" min="-0.15" max="0.15" step="0.01" value="0.1"></div>
+            <div class="slider"><div class="row"><label for="fv0">Startgeschwindigkeit <span class="m">v(0)</span></label><output id="fv0Out"></output></div><input type="range" id="fv0" min="-1" max="1" step="0.05" value="0"></div>
+            <label class="chip" style="justify-self:start"><input type="checkbox" id="fg" checked><span class="lbl">Schwerkraft (senkrechtes Pendel)</span></label>
+          </div>
+          <div id="setFaden" class="dblock" hidden>
+            <div class="slider"><div class="row"><label for="pl">Fadenlänge <span class="m">l</span></label><output id="plOut"></output></div><input type="range" id="pl" min="0.2" max="2" step="0.05" value="1"></div>
+            <div class="slider"><div class="row"><label for="pa">Startwinkel <span class="m">φ(0)</span></label><output id="paOut"></output></div><input type="range" id="pa" min="2" max="90" step="1" value="10"></div>
+            <div class="slider"><div class="row"><label for="pg">Erdbeschleunigung <span class="m">g</span></label><output id="pgOut"></output></div><input type="range" id="pg" min="1" max="25" step="0.01" value="9.81"></div>
+            <div class="presets" aria-label="Ort wählen">
+              <button class="btn small" type="button" data-pg="9.81">Erde</button>
+              <button class="btn small" type="button" data-pg="1.62">Mond</button>
+              <button class="btn small" type="button" data-pg="24.79">Jupiter</button>
+            </div>
+            <div class="slider"><div class="row"><label for="pm">Masse <span class="m">m</span></label><output id="pmOut"></output></div><input type="range" id="pm" min="0.05" max="1" step="0.05" value="0.2"></div>
+          </div>
+          <div class="slider"><div class="row"><label for="dd">Dämpfung <span class="m">δ / ω<sub>0</sub></span></label><output id="ddOut"></output></div>
+            <input type="range" id="dd" min="0" max="2.5" step="0.01" value="0" aria-describedby="ddScale">
+            <div class="dscale" id="ddScale"><span class="z1">schwach gedämpft</span><span class="mk">kritisch</span><span class="z3">überkritisch</span></div>
+          </div>
+          <div class="presets" aria-label="Dämpfung wählen">
+            <button class="btn small" type="button" data-dz="0">Ungedämpft</button>
+            <button class="btn small" type="button" data-dz="0.1">Schwach</button>
+            <button class="btn small" type="button" data-dz="1">Kritisch</button>
+            <button class="btn small" type="button" data-dz="2">Überkritisch</button>
+          </div>
+          <p class="optnote" id="ddNote"></p>
+          <div class="slider">
+            <div class="row"><span class="lab" id="tempoLbl">Tempo</span></div>
+            <div class="seg" role="radiogroup" aria-labelledby="tempoLbl">
+              <label><input type="radio" name="tempo" value="0.1">0.1×</label>
+              <label><input type="radio" name="tempo" value="0.25">0.25×</label>
+              <label><input type="radio" name="tempo" value="0.5" checked>0.5×</label>
+              <label><input type="radio" name="tempo" value="1">1×</label>
+            </div>
+          </div>
+        </section>
+
+        <section class="group" aria-labelledby="h-show">
+          <h3 id="h-show">Anzeigen</h3>
+          <div class="chips">
+            <label class="chip"><input type="checkbox" id="sPen" checked><span class="lbl">Masse schreibt die Kurve</span></label>
+            <label class="chip"><input type="checkbox" id="sSol" checked><span class="lbl" id="sSolLbl">Formel-Lösung</span></label>
+            <label class="chip"><input type="checkbox" id="sF" checked><span class="lbl">Kräfte</span></label>
+            <label class="chip"><input type="checkbox" id="sV" checked><span class="lbl">Geschwindigkeit</span></label>
+          </div>
+          <p class="note" id="showNote"></p>
+        </section>
+
+        <section class="group" aria-labelledby="h-num">
+          <h3 id="h-num">Messwerte</h3>
+          <div class="tablewrap"><table><tbody id="numTable"></tbody></table></div>
+        </section>
+
+        <section class="group" aria-labelledby="h-eq">
+          <h3 id="h-eq">Harmonische Schwingung</h3>
+          <div id="eqBox"></div>
+        </section>
+
+        <section class="group" aria-labelledby="h-try">
+          <h3 id="h-try">Zum Ausprobieren</h3>
+          <div id="tryBox"></div>
+          <p class="foot" id="foot"></p>
+        </section>
+      </div>
+
+      <div id="tabDgl" class="panel" hidden>
+        <div id="dglBox"></div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<div class="qr-overlay" id="qr" hidden role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+  <div class="qr-box">
+    <h2 id="qrTitle">Mit dem Handy öffnen</h2>
+    <div class="qr-code" id="qrCode"></div>
+    <p class="qr-url" id="qrUrlText"></p>
+    <label for="qrUrl">Adresse dieser Seite</label>
+    <input type="url" id="qrUrl" placeholder="https://…" autocomplete="off" spellcheck="false">
+    <div class="qr-row"><button class="btn small" id="qrClose" type="button">Schliessen</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // Address put into the QR code when the page runs inside a frame (e.g. the claude.ai viewer).
+  // Hosted on its own, the page uses its own address. Put the GitHub Pages address here.
+  const SHARE_URL = 'https://david-1-2-3.github.io/harmonische-schwingung/';
+
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const MATH = '"STIX Two Text", "Cambria Math", "Times New Roman", serif';
+  const BODY = '"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif';
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const DEG = 180 / Math.PI;
+  function fmt(v, d = 0) {
+    if (!isFinite(v)) return '—';
+    if (Math.abs(v) < 0.5 * Math.pow(10, -d)) v = 0;
+    return v.toLocaleString('de-CH', { minimumFractionDigits: d, maximumFractionDigits: d }).replace('-', '−');
+  }
+  const D1 = s => `<span class="dt">${s}</span>`;     // one dot: first time derivative
+  const D2 = s => `<span class="dt2">${s}</span>`;    // two dots: second time derivative
+  const M = s => `<span class="m">${s}</span>`;
+
+  /* ---------- colours and canvas helpers ---------- */
+  const C = {};
+  const TOKENS = ['floor', 'grid', 'grid2', 'mark', 'muted', 'ink', 'halo', 'surface', 'accent', 'block', 'blockedge', 'spring', 'equi',
+    'ffield', 'ekin', 'epot', 'heat', 'cx', 'cv', 'ca', 'cF', 'rope', 'line'];
+  let dirty = true;
+  function readColors() {
+    const cs = getComputedStyle(document.documentElement);
+    for (const k of TOKENS) C[k] = cs.getPropertyValue('--' + k).trim();
+    dirty = true;
+  }
+  function fit(cv) {
+    const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+    return { ctx, w: r.width, h: r.height };
+  }
+  function arrow(ctx, x0, y0, dx, dy, col, lw) {
+    const L = Math.hypot(dx, dy);
+    if (L < 3) return false;
+    const ux = dx / L, uy = dy / L, hl = Math.min(L * 0.55, lw * 3.6), hw = hl * 0.55;
+    const tx = x0 + dx, ty = y0 + dy, bx = tx - ux * hl, by = ty - uy * hl;
+    const headPath = () => { ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(bx - uy * hw, by + ux * hw); ctx.lineTo(bx + uy * hw, by - ux * hw); ctx.closePath(); };
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = C.halo; ctx.lineWidth = lw + 3;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.lineWidth = 3; headPath(); ctx.stroke();
+    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(bx + ux, by + uy); ctx.stroke();
+    headPath(); ctx.fill();
+    return true;
+  }
+  function text(ctx, s, x, y, col, font, align = 'center', base = 'middle') {
+    ctx.save(); ctx.font = font; ctx.textAlign = align; ctx.textBaseline = base;
+    ctx.lineJoin = 'round'; ctx.strokeStyle = C.halo; ctx.lineWidth = 4; ctx.strokeText(s, x, y);
+    ctx.fillStyle = col; ctx.fillText(s, x, y); ctx.restore();
+  }
+  // italic symbol with an optional subscript, e.g. F_D
+  function sym(ctx, x, y, s, sub, col, fs = 15) {
+    ctx.save(); ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+    ctx.font = `italic ${fs}px ${MATH}`; const w1 = ctx.measureText(s).width;
+    ctx.strokeStyle = C.halo; ctx.lineWidth = 4; ctx.fillStyle = col;
+    ctx.strokeText(s, x, y); ctx.fillText(s, x, y);
+    if (sub) { ctx.font = `italic ${Math.round(fs * 0.68)}px ${MATH}`; ctx.strokeText(sub, x + w1 + 1, y + fs * 0.3); ctx.fillText(sub, x + w1 + 1, y + fs * 0.3); }
+    ctx.restore();
+  }
+
+  /* ---------- state ---------- */
+  const DEF = { fe: { m: 0.5, D: 20, x0: 0.1, v0: 0, grav: true }, fa: { l: 1, phi0: 10, g: 9.81, m: 0.2 }, zeta: 0 };
+  const S = {
+    mode: 'feder', fe: { ...DEF.fe }, fa: { ...DEF.fa }, delta: 0, zeta: 0, tempo: 0.5, gs: { x: true, v: false, a: false, E: false },
+    show: { sol: true, F: true, V: true, pen: true },
+    run: true, t: 0, y: 0, v: 0, hist: [], cross: [], Tm: null, lastHist: -1, E0: 1, A0: 0.1, y0: 0, vv0: 0,
+  };
+  const G0 = 9.81;
+  const feder = () => S.mode === 'feder';
+  const w0 = () => feder() ? Math.sqrt(S.fe.D / S.fe.m) : Math.sqrt(S.fa.g / S.fa.l);
+  const T0 = () => 2 * Math.PI / w0();
+  const shift = () => feder() && S.fe.grav ? S.fe.m * G0 / S.fe.D : 0;   // the rest position moves down by m g / D
+  function acc(y, v) {
+    if (feder()) return -(S.fe.D / S.fe.m) * y - 2 * S.delta * v;
+    return -(S.fa.g / S.fa.l) * Math.sin(y) - 2 * S.delta * v;
+  }
+  function energies(y, v) {
+    if (feder()) return { k: 0.5 * S.fe.m * v * v, p: 0.5 * S.fe.D * y * y };
+    const { m, l, g } = S.fa;
+    return { k: 0.5 * m * l * l * v * v, p: m * g * l * (1 - Math.cos(y)) };
+  }
+  const windowLen = () => clamp(1.6 * T0(), 1.2, 8);   // about one and a half periods
+
+  function reset() {
+    S.delta = S.zeta * w0();   // δ follows ω0, so the kind of damping stays the same when m, D or l change
+    if (feder()) { S.y0 = S.fe.x0; S.vv0 = S.fe.v0; } else { S.y0 = S.fa.phi0 / DEG; S.vv0 = 0; }
+    S.y = S.y0; S.v = S.vv0; S.t = 0; S.cross = []; S.Tm = null; S.lastHist = -1;
+    const w = w0();
+    S.A0 = Math.max(feder() ? 0.01 : 0.02, Math.hypot(S.y0, S.vv0 / w));
+    const e = energies(S.y, S.v); S.E0 = Math.max(1e-9, e.k + e.p);
+    S.hist = [];
+    record();
+    dirty = true; updateUI(true);
+  }
+  function record() {
+    const a = acc(S.y, S.v), e = energies(S.y, S.v);
+    S.hist.push([S.t, S.y, S.v, a, e.k, e.p]);
+    const keep = S.t - windowLen() - 0.5;
+    while (S.hist.length && S.hist[0][0] < keep) S.hist.shift();
+  }
+  function step(dt) {
+    const n = Math.max(1, Math.ceil(dt / 0.0005)), h = dt / n;
+    for (let i = 0; i < n; i++) {
+      const y = S.y, v = S.v;
+      const k1y = v, k1v = acc(y, v);
+      const k2y = v + h / 2 * k1v, k2v = acc(y + h / 2 * k1y, k2y);
+      const k3y = v + h / 2 * k2v, k3v = acc(y + h / 2 * k2y, k3y);
+      const k4y = v + h * k3v, k4v = acc(y + h * k3y, k4y);
+      S.y = y + h / 6 * (k1y + 2 * k2y + 2 * k3y + k4y);
+      S.v = v + h / 6 * (k1v + 2 * k2v + 2 * k3v + k4v);
+      // upward zero crossings give the measured period
+      if (y < 0 && S.y >= 0) {
+        const tc = S.t + h * (-y / (S.y - y));
+        S.cross.push(tc);
+        if (S.cross.length > 1) S.Tm = S.cross[S.cross.length - 1] - S.cross[S.cross.length - 2];
+        if (S.cross.length > 6) S.cross.shift();
+      }
+      S.t += h;
+    }
+    if (S.t - S.lastHist >= 0.008) { S.lastHist = S.t; record(); }
+    dirty = true;
+  }
+  // the formula: damped linear oscillator with the start values (for the thread pendulum: small-angle approximation)
+  function formula(t) {
+    const w = w0(), d = S.delta, y0 = S.y0, v0 = S.vv0;
+    if (d < w - 1e-9) {
+      const wd = Math.sqrt(w * w - d * d);
+      return Math.exp(-d * t) * (y0 * Math.cos(wd * t) + (v0 + d * y0) / wd * Math.sin(wd * t));
+    }
+    if (Math.abs(d - w) <= 1e-9) return Math.exp(-d * t) * (y0 + (v0 + d * y0) * t);
+    const s = Math.sqrt(d * d - w * w), r1 = -d + s, r2 = -d - s, c1 = (v0 - r2 * y0) / (r1 - r2);
+    return c1 * Math.exp(r1 * t) + (y0 - c1) * Math.exp(r2 * t);
+  }
+
+  /* ---------- drawing ---------- */
+  const cv = $('#cv');
+  const QCOL = { x: 'cx', v: 'cv', a: 'ca' };
+  function draw() {
+    const { ctx, w, h } = fit(cv);
+    ctx.clearRect(0, 0, w, h);
+    const fe = feder();
+    const aw = Math.round(w * (fe ? (w < 520 ? 0.36 : 0.32) : (w < 520 ? 0.42 : 0.38)));
+    $('#gsel').style.left = (aw + 6) + 'px';
+    const top0 = 60;   // the band above holds the buttons
+    const onlyE = S.gs.E && !S.gs.x && !S.gs.v && !S.gs.a;
+    const gx0 = aw + 46, gx1 = w - (S.gs.E && !onlyE ? 48 : 16), gy0 = top0 + 8, gy1 = h - 30;
+    const yMid = (gy0 + gy1) / 2, half = (fe ? 0.32 : 0.4) * (gy1 - gy0);
+    // pen mode: the mass writes the curve; the newest point is at the left edge, the paper runs to the right
+    const pen = fe && S.show.pen;
+    const W = windowLen(), tw0 = pen ? Math.max(0, S.t - W) : Math.max(0, S.t - W * 0.92), tw1 = pen ? S.t : tw0 + W;
+    const X = pen ? t => gx0 + (S.t - t) / W * (gx1 - gx0) : t => gx0 + (t - tw0) / W * (gx1 - gx0);
+
+    // divider between animation and graph
+    ctx.strokeStyle = C.grid2; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(aw, 12); ctx.lineTo(aw, h - 12); ctx.stroke();
+
+    const kx = half / S.A0;   // pixels per unit of displacement, shared by the animation and the x graph
+
+    /* ---- animation ---- */
+    const vref = S.A0 * w0();
+    if (fe) {
+      const cx = aw * 0.42, mY = yMid - S.y * kx, bs = clamp(aw * 0.2, 26, 44);
+      // ceiling
+      ctx.fillStyle = C.mark; ctx.fillRect(cx - aw * 0.3, top0 - 5, aw * 0.6, 5);
+      ctx.strokeStyle = C.mark; ctx.lineWidth = 1.5;
+      for (let i = 0; i < 9; i++) { const x = cx - aw * 0.28 + i * aw * 0.07; ctx.beginPath(); ctx.moveTo(x, top0 - 5); ctx.lineTo(x + 7, top0 - 13); ctx.stroke(); }
+      // spring
+      const top = top0, bot = mY - bs / 2, nz = 14, sw = clamp(aw * 0.09, 9, 16);
+      ctx.strokeStyle = C.spring; ctx.lineWidth = 2.6; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx, top + 8);
+      for (let i = 1; i < nz; i++) ctx.lineTo(cx + (i % 2 ? sw : -sw), top + 8 + (bot - top - 16) * i / nz);
+      ctx.lineTo(cx, bot - 8); ctx.lineTo(cx, bot); ctx.stroke();
+      // rest position (and, with gravity, where the spring would be relaxed)
+      ctx.setLineDash([3, 4]); ctx.strokeStyle = C.equi; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(8, yMid); ctx.lineTo(S.gs.x ? gx1 : aw, yMid); ctx.stroke();
+      const yr = yMid - shift() * kx;
+      if (S.fe.grav && yr > top0 + 6) { ctx.beginPath(); ctx.moveTo(8, yr); ctx.lineTo(aw - 8, yr); ctx.stroke(); }
+      ctx.setLineDash([]);
+      text(ctx, 'x = 0', aw - 8, yMid - 9, C.muted, `italic 12px ${MATH}`, 'right');
+      if (S.fe.grav && yr > top0 + 6) text(ctx, 'entspannt', aw - 8, yr - 9, C.muted, `11px ${BODY}`, 'right');
+      // mass
+      ctx.fillStyle = C.mark; ctx.fillRect(cx - bs / 2, mY - bs / 2, bs, bs);
+      ctx.fillStyle = C.surface; ctx.font = `700 ${Math.round(bs * 0.45)}px ${BODY}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('m', cx, mY + 1);
+      // arrows: spring force (up = positive), weight, velocity
+      if (S.show.F) {
+        const FD = S.fe.D * (shift() - S.y), FG = S.fe.grav ? S.fe.m * G0 : 0, Fref = Math.max(S.fe.D * S.A0, FG, 1e-6);
+        const kF = 42 / Fref;
+        const lD = clamp(FD * kF, -95, 95), y0D = mY + (lD > 0 ? -bs / 2 : bs / 2);
+        if (arrow(ctx, cx - bs * 0.22, y0D, 0, -lD, C.cF, 3)) sym(ctx, cx - bs * 0.22 - 24, y0D - lD * 0.6, 'F', 'D', C.cF);
+        const lG = clamp(FG * kF, 0, 95);
+        if (FG && arrow(ctx, cx + bs * 0.22, mY + bs / 2, 0, lG, C.ffield, 3)) sym(ctx, cx + bs * 0.22 + 6, mY + bs / 2 + lG * 0.6, 'F', 'G', C.ffield);
+      }
+      if (S.show.V && arrow(ctx, cx + bs * 0.95, mY, 0, -clamp(S.v / vref * 40, -80, 80), C.cv, 3)) sym(ctx, cx + bs * 0.95 + 7, mY - clamp(S.v / vref * 40, -80, 80) * 0.6, 'v', '', C.cv);
+      if (pen) {   // a rigid arm with a pen: the mass writes on the paper
+        ctx.strokeStyle = C.mark; ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx + bs / 2, mY); ctx.lineTo(gx0, mY); ctx.stroke();
+        ctx.fillStyle = C.mark; ctx.beginPath(); ctx.arc(gx0, mY, 2.5, 0, 2 * Math.PI); ctx.fill();
+      } else if (S.gs.x) {   // dotted line from the mass to the current point in the graph
+        ctx.setLineDash([2, 4]); ctx.strokeStyle = C.cx; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(cx + bs / 2 + 4, mY); ctx.lineTo(X(S.t), mY); ctx.stroke(); ctx.setLineDash([]);
+      }
+    } else {
+      const px = aw / 2, py = top0 - 2;
+      const L = Math.min(h - top0 - 40, (aw / 2 - 22) / Math.max(Math.sin(Math.min(S.A0, Math.PI / 2)), 0.3));
+      const bx = px + L * Math.sin(S.y), by = py + L * Math.cos(S.y), R = clamp(aw * 0.06, 10, 15);
+      ctx.fillStyle = C.mark; ctx.fillRect(px - 26, py - 6, 52, 4);
+      ctx.setLineDash([3, 4]); ctx.strokeStyle = C.equi; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + L + R + 6); ctx.stroke();
+      // arc of the swing
+      ctx.beginPath(); ctx.arc(px, py, L, Math.PI / 2 - S.A0, Math.PI / 2 + S.A0); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = C.rope; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(bx, by); ctx.stroke();
+      // angle
+      if (Math.abs(S.y) > 0.03) {
+        ctx.strokeStyle = C.cF; ctx.lineWidth = 2; ctx.beginPath();
+        const r = Math.min(46, L * 0.3);
+        ctx.arc(px, py, r, Math.PI / 2, Math.PI / 2 - S.y, S.y > 0); ctx.stroke();
+        sym(ctx, px + (r + 8) * Math.sin(S.y / 2) - 5, py + (r + 10) * Math.cos(S.y / 2), 'φ', '', C.cF, 15);
+      }
+      ctx.fillStyle = C.rope; ctx.beginPath(); ctx.arc(bx, by, R, 0, 2 * Math.PI); ctx.fill();
+      ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(px, py, 4, 0, 2 * Math.PI); ctx.fill();
+      // tangent direction of increasing angle (screen coordinates)
+      const tx = Math.cos(S.y), ty = -Math.sin(S.y);
+      if (S.show.F) {
+        const Fr = -S.fa.m * S.fa.g * Math.sin(S.y), Fref = S.fa.m * S.fa.g * Math.max(Math.sin(Math.min(S.A0, Math.PI / 2)), 0.05);
+        const Lf = clamp(Fr / Fref * 40, -80, 80);
+        if (arrow(ctx, bx, by, tx * Lf, ty * Lf, C.ffield, 3)) sym(ctx, bx + tx * Lf * 1.15 - 4, by + ty * Lf * 1.15 + 14, 'F', 'r', C.ffield);
+      }
+      if (S.show.V) {
+        const Lv = clamp(S.v / w0() / S.A0 * 40, -80, 80);
+        if (arrow(ctx, bx, by - R - 4, tx * Lv, ty * Lv, C.cv, 3)) sym(ctx, bx + tx * Lv * 1.1 - 3, by - R - 16 + ty * Lv, 'v', '', C.cv);
+      }
+    }
+
+    /* ---- graph: any combination of x, v, a (each on its own scale, same height) and E ---- */
+    const QS = ['x', 'v', 'a'].filter(k => S.gs[k]);
+    const spec = {
+      x: { max: S.A0, fac: fe ? 100 : DEG, dec: fe ? 1 : 0, unit: fe ? 'cm' : '°', lab: fe ? 'x' : 'φ', idx: 1 },
+      v: { max: S.A0 * w0(), fac: 1, dec: 2, unit: fe ? 'm/s' : 'rad/s', lab: fe ? 'v' : 'φ̇', idx: 2 },
+      a: { max: S.A0 * w0() * w0(), fac: 1, dec: 1, unit: fe ? 'm/s²' : 'rad/s²', lab: fe ? 'a' : 'φ̈', idx: 3 },
+    };
+    const Yq = (k, v) => yMid - v / spec[k].max * half;
+    const eTop = gy0 + 8, Ye = e => gy1 - e / S.E0 * (gy1 - eTop);
+    const eFac = S.E0 < 0.5 ? 1000 : 1, eUnit = eFac === 1000 ? 'mJ' : 'J', eDec = S.E0 * eFac < 10 ? 1 : 0;
+
+    // axes and time ticks
+    ctx.strokeStyle = C.grid2; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(gx0, gy0 - 6); ctx.lineTo(gx0, gy1); ctx.lineTo(gx1, gy1); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = `12px ${BODY}`;
+    const pps = (gx1 - gx0) / W, tStep = [0.25, 0.5, 1, 2].find(s => s * pps >= 44) || 2;   // at least 44 px between ticks
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let t = Math.ceil(tw0 / tStep) * tStep; t <= tw1 - tStep * 0.3; t += tStep) {
+      const x = X(t); if (x < gx0 + 8 || x > gx1 - 34) continue;
+      ctx.fillText(fmt(t, tStep < 1 ? (tStep < 0.5 ? 2 : 1) : 0), x, gy1 + 5);
+      ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(x, gy0); ctx.lineTo(x, gy1); ctx.stroke();
+    }
+    text(ctx, 't / s', gx1, gy1 + 13, C.ink, `italic 13px ${MATH}`, 'right', 'top');
+    if (QS.length) {
+      ctx.strokeStyle = C.mark; ctx.beginPath(); ctx.moveTo(gx0, yMid); ctx.lineTo(gx1, yMid); ctx.stroke();
+      for (const s of [1, -1]) { ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(gx0, yMid - s * half); ctx.lineTo(gx1, yMid - s * half); ctx.stroke(); }
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillStyle = C.muted; ctx.fillText('0', gx0 - 6, yMid);
+      // one tick label per quantity, stacked, in its colour
+      QS.forEach((k, i) => {
+        const sp = spec[k], dy = (i - (QS.length - 1) / 2) * 13;
+        for (const s of [1, -1]) text(ctx, fmt(s * sp.max * sp.fac, sp.dec), gx0 - 5, yMid - s * half + dy, C[QCOL[k]], `12px ${BODY}`, 'right');
+      });
+      // axis titles at the top right, one per quantity
+      let tx = gx1;
+      for (const k of [...QS].reverse()) {
+        const s = `${spec[k].lab} / ${spec[k].unit}`;
+        ctx.font = `italic 14px ${MATH}`; const tw = ctx.measureText(s).width;
+        text(ctx, s, tx, gy0 - 4, C[QCOL[k]], `italic 14px ${MATH}`, 'right', 'bottom'); tx -= tw + 14;
+      }
+    }
+    if (S.gs.E) {
+      const ex = onlyE ? gx0 - 6 : gx1 + 6, al = onlyE ? 'right' : 'left';
+      ctx.fillStyle = C.muted; ctx.font = `12px ${BODY}`; ctx.textAlign = al; ctx.textBaseline = 'middle';
+      ctx.fillText(fmt(S.E0 * eFac, eDec), ex, eTop); ctx.fillText('0', ex, gy1 - 2);
+      text(ctx, `E / ${eUnit}`, onlyE ? gx1 : gx1 + 6, onlyE ? gy0 - 4 : (eTop + gy1) / 2, C.ink, `italic 13px ${MATH}`, onlyE ? 'right' : 'left', onlyE ? 'bottom' : 'middle');
+      if (onlyE) { ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(gx0, eTop); ctx.lineTo(gx1, eTop); ctx.stroke(); }
+    }
+
+    ctx.save(); ctx.beginPath(); ctx.rect(gx0 + 1, 0, gx1 - gx0, h); ctx.clip();
+    const H = S.hist;
+    const line = (fy, col, lw, dash = []) => {
+      ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.setLineDash(dash); ctx.lineJoin = 'round'; ctx.beginPath();
+      let st = false;
+      for (const r of H) { if (r[0] < tw0 - 0.05) continue; const x = X(r[0]), y = fy(r); if (!st) { ctx.moveTo(x, y); st = true; } else ctx.lineTo(x, y); }
+      ctx.stroke(); ctx.setLineDash([]);
+    };
+    if (S.gs.E) {
+      const lw = onlyE ? 2.6 : 1.8;
+      line(r => Ye(r[4] + r[5]), C.ink, lw, onlyE ? [] : [6, 4]);
+      line(r => Ye(r[5]), C.epot, lw);
+      line(r => Ye(r[4]), C.ekin, lw);
+      const e = energies(S.y, S.v);
+      for (const [v, c] of [[e.k + e.p, C.ink], [e.p, C.epot], [e.k, C.ekin]]) { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(X(S.t), Ye(v), 3.5, 0, 2 * Math.PI); ctx.fill(); }
+    }
+    if (S.gs.x && S.show.sol) {
+      // the formula, dashed, for the whole window including the near future
+      ctx.strokeStyle = C.ink; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.6; ctx.setLineDash([5, 5]); ctx.beginPath();
+      const fEnd = pen ? S.t : tw0 + W;
+      for (let i = 0; i <= 240; i++) { const t = tw0 + (fEnd - tw0) * i / 240, x = X(t), y = Yq('x', formula(t)); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    }
+    const curNow = { x: S.y, v: S.v, a: acc(S.y, S.v) };
+    for (const k of QS) {
+      line(r => Yq(k, r[spec[k].idx]), C[QCOL[k]], 3);
+      ctx.fillStyle = C[QCOL[k]]; ctx.beginPath(); ctx.arc(X(S.t), Yq(k, curNow[k]), 4.5, 0, 2 * Math.PI); ctx.fill();
+    }
+    ctx.restore();
+    // energy legend in the band above the graph, when there is room
+    const gsr = aw + 6 + $('#gsel').offsetWidth + 14;
+    if (S.gs.E && gsr + 250 < w - 56) {
+      let lx = gsr; const ly = 29;
+      ctx.font = `12px ${BODY}`;
+      for (const [s, c] of [['kinetisch', C.ekin], ['potentiell', C.epot], ['gesamt', C.ink]]) {
+        ctx.fillStyle = c; ctx.fillRect(lx, ly - 1.5, 14, 3);
+        text(ctx, s, lx + 18, ly, C.muted, `12px ${BODY}`, 'left'); lx += ctx.measureText(s).width + 34;
+      }
+    }
+  }
+
+  /* ---------- graph selector on the canvas ---------- */
+  function buildGsel() {
+    const fe = feder();
+    const items = [['x', fe ? 'x' : 'φ', fe ? 'Auslenkung x(t)' : 'Winkel φ(t)'], ['v', fe ? 'v' : D1('φ'), fe ? 'Geschwindigkeit v(t)' : 'Winkelgeschwindigkeit'],
+      ['a', fe ? 'a' : D2('φ'), fe ? 'Beschleunigung a(t)' : 'Winkelbeschleunigung'], ['E', '<span class="e">E</span>', 'Energie']];
+    $('#gsel').innerHTML = items.map(([k, lab, t]) => `<button type="button" role="checkbox" data-g="${k}" aria-checked="${!!S.gs[k]}" title="${t}" aria-label="${t}">${lab}</button>`).join('');
+  }
+  $('#gsel').addEventListener('click', e => {
+    const b = e.target.closest('[data-g]'); if (!b) return;
+    const k = b.dataset.g;
+    // several quantities can be shown together; at least one stays on
+    if (S.gs[k] && Object.values(S.gs).filter(Boolean).length === 1) return;
+    S.gs[k] = !S.gs[k];
+    b.setAttribute('aria-checked', String(S.gs[k]));
+    dirty = true; updateUI(true);
+  });
+
+  /* ---------- panel ---------- */
+  let lastKey = '', lastMode = '';
+  function updateUI(force) {
+    const fe = feder(), w = w0(), e = energies(S.y, S.v), a = acc(S.y, S.v);
+    const eF = S.E0 < 0.5 ? 1000 : 1, eU = eF === 1000 ? 'mJ' : 'J', eD = S.E0 * eF < 10 ? 2 : 1;
+    const Texact = fe ? T0() : T0() * (1 + Math.pow(S.fa.phi0 / DEG, 2) / 16 + 11 * Math.pow(S.fa.phi0 / DEG, 4) / 3072);
+    const rows = fe ? [
+      ['Zeit <span class="m">t</span>', 's', fmt(S.t, 2)],
+      ['<span class="t-cx">Auslenkung</span> <span class="m">x</span>', 'cm', fmt(S.y * 100, 1)],
+      ['<span class="t-cv">Geschwindigkeit</span> <span class="m">v</span>', 'm/s', fmt(S.v, 2)],
+      ['<span class="t-ca">Beschleunigung</span> <span class="m">a</span>', 'm/s²', fmt(a, 2)],
+      ['<span class="t-cF">Federkraft</span> <span class="m">F<sub>D</sub></span> (+ = nach oben)', 'N', fmt(S.fe.D * (shift() - S.y), 2)],
+      ['<span class="t-ek">Kinetische Energie</span>', eU, fmt(e.k * eF, eD)],
+      ['<span class="t-ep">Potentielle Energie</span> <span class="m">½ D x²</span>', eU, fmt(e.p * eF, eD)],
+      ['Gesamtenergie', eU, fmt((e.k + e.p) * eF, eD)],
+      ['Kreisfrequenz <span class="m">ω<sub>0</sub> = √(D/m)</span>', '1/s', fmt(w, 2)],
+      ['Periode <span class="m">T = 2π/ω<sub>0</sub></span>', 's', fmt(T0(), 3)],
+      ['Periode gemessen', 's', S.Tm ? fmt(S.Tm, 3) : '—'],
+    ] : [
+      ['Zeit <span class="m">t</span>', 's', fmt(S.t, 2)],
+      ['<span class="t-cx">Winkel</span> <span class="m">φ</span>', '°', fmt(S.y * DEG, 1)],
+      ['<span class="t-cv">Winkelgeschwindigkeit</span> ' + M(D1('φ')), 'rad/s', fmt(S.v, 2)],
+      ['<span class="t-ca">Winkelbeschleunigung</span> ' + M(D2('φ')), 'rad/s²', fmt(a, 2)],
+      ['Rücktreibende Kraft <span class="m">F<sub>r</sub> = m g sin φ</span>', 'N', fmt(S.fa.m * S.fa.g * Math.sin(Math.abs(S.y)), 3)],
+      ['<span class="t-ek">Kinetische Energie</span>', eU, fmt(e.k * eF, eD)],
+      ['<span class="t-ep">Potentielle Energie</span>', eU, fmt(e.p * eF, eD)],
+      ['Gesamtenergie', eU, fmt((e.k + e.p) * eF, eD)],
+      ['Kreisfrequenz <span class="m">ω<sub>0</sub> = √(g/l)</span>', '1/s', fmt(w, 2)],
+      ['Periode, Näherung <span class="m">2π √(l/g)</span>', 's', fmt(T0(), 3)],
+      ['Periode ohne Näherung', 's', fmt(Texact, 3)],
+      ['Periode gemessen', 's', S.Tm ? fmt(S.Tm, 3) : '—'],
+    ];
+    const html = rows.map(r => `<tr><th scope="row">${r[0]}<span class="u">${r[1]}</span></th><td>${r[2]}</td></tr>`).join('');
+    const tb = $('#numTable'); if (tb.dataset.h !== html) { tb.innerHTML = html; tb.dataset.h = html; }
+
+    if (force) {
+      $('#fmOut').textContent = fmt(S.fe.m, 2) + ' kg'; $('#fDOut').textContent = fmt(S.fe.D) + ' N/m';
+      $('#fx0Out').textContent = fmt(S.fe.x0 * 100) + ' cm'; $('#fv0Out').textContent = fmt(S.fe.v0, 2) + ' m/s';
+      $('#plOut').textContent = fmt(S.fa.l, 2) + ' m'; $('#paOut').textContent = fmt(S.fa.phi0) + '°';
+      $('#pgOut').textContent = fmt(S.fa.g, 2) + ' m/s²'; $('#pmOut').textContent = fmt(S.fa.m, 2) + ' kg';
+      const zc = S.zeta === 0 ? 'ungedämpft' : S.zeta < 1 ? 'schwach gedämpft' : S.zeta === 1 ? 'kritisch' : 'überkritisch';
+      $('#ddOut').textContent = S.zeta === 0 ? 'keine' : `${fmt(S.zeta, 2)}, δ = ${fmt(S.delta, 2)} 1/s (${zc})`;
+      $$('[data-dz]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.dz === S.zeta)));
+      $('#ddNote').innerHTML = S.zeta === 0 ? '<b>Ungedämpft:</b> Die Schwingung läuft ewig mit gleicher Amplitude.'
+        : S.zeta < 1 ? `<b>Schwach gedämpft</b> (<span class="m">δ &lt; ω<sub>0</sub></span>): Die Masse schwingt weiter, die Amplitude nimmt mit <span class="m">e<sup>−δt</sup></span> ab. Kreisfrequenz <span class="m">ω<sub>d</sub> = √(ω<sub>0</sub>² − δ²)</span> = ${fmt(Math.sqrt(w0() ** 2 - S.delta ** 2), 2)} 1/s, etwas kleiner als <span class="m">ω<sub>0</sub></span> = ${fmt(w0(), 2)} 1/s.`
+        : S.zeta === 1 ? '<b>Kritisch gedämpft</b> (aperiodischer Grenzfall, <span class="m">δ = ω<sub>0</sub></span>): Die Masse kehrt ohne Überschwingen zur Ruhelage zurück, und zwar so schnell wie möglich. So stellt man zum Beispiel Stossdämpfer ein.'
+        : '<b>Überkritisch gedämpft</b> (Kriechfall, <span class="m">δ &gt; ω<sub>0</sub></span>): Die Masse kriecht langsam zur Ruhelage zurück, ohne zu schwingen. Je stärker die Dämpfung, desto langsamer.';
+      $('#setFeder').hidden = !fe; $('#setFaden').hidden = fe;
+      $('#sSolLbl').textContent = fe ? 'Formel-Lösung' : 'Kleinwinkel-Näherung';
+      $('#sPen').closest('.chip').hidden = !fe;
+      $('#showNote').innerHTML = (fe ? (S.show.pen ? '<b>Masse schreibt:</b> Ein Stift an der Masse zeichnet die Kurve direkt auf das Papier. Die neueste Stelle ist ganz links beim Stift, das Papier läuft nach rechts weg, die Zeit nimmt also nach links zu. ' : '') + 'Gestrichelt im Graphen von <span class="m">x(t)</span>: die Lösung der Bewegungsgleichung als Formel. Sie liegt genau auf der simulierten Kurve.'
+        : 'Gestrichelt im Graphen von <span class="m">φ(t)</span>: die Lösung mit der Näherung <span class="m">sin φ ≈ φ</span>. Bei grossen Winkeln läuft sie der echten Bewegung davon.')
+        + ' Mit den Knöpfen x, v, a und E über dem Graphen kannst du mehrere Grössen gleichzeitig einblenden, zum Beispiel x und v. Jede hat ihre eigene Skala, die Zahlen an der Achse haben die Farbe der Kurve. Die Energien bekommen eine eigene Achse rechts.';
+      $('#lead').textContent = fe ? 'Eine Masse an einer Feder. Die Federkraft zeigt immer zur Ruhelage und ist proportional zur Auslenkung.' : 'Eine Masse an einem Faden. Die rücktreibende Kraft zeigt immer zur Ruhelage. Für kleine Winkel ist sie proportional zur Auslenkung.';
+      writeEq(); writeDgl();
+      if (lastMode !== S.mode) { lastMode = S.mode; writeTry(); }
+    }
+    explain();
+  }
+
+  function explain() {
+    const fe = feder(), w = w0(), a = acc(S.y, S.v);
+    let pill, st = '', title, txt;
+    if (S.run) {
+      pill = 'Läuft'; st = 'on';
+      if (fe) {
+        title = 'Rücktreibende Kraft F = −D x';
+        txt = `Die Federkraft zeigt immer zur Ruhelage und ist proportional zur Auslenkung. Darum schwingt die Masse sinusförmig mit <span class="m">ω<sub>0</sub> = √(D/m)</span> = ${fmt(w, 2)} 1/s, also <span class="m">T</span> = ${fmt(T0(), 2)} s.` +
+          (S.fe.grav ? ` Die Schwerkraft verschiebt nur die Ruhelage um <span class="m">m g/D</span> = ${fmt(shift() * 100, 1)} cm nach unten, die Frequenz bleibt gleich.` : '') +
+          (S.zeta > 0 && S.zeta < 1 ? ' Mit Dämpfung wird die Amplitude kleiner, die Periode bleibt fast gleich.' : S.zeta === 1 ? ' Kritisch gedämpft: Sie kehrt ohne Überschwingen zurück.' : S.zeta > 1 ? ' Überkritisch gedämpft: Sie kriecht zurück, ohne zu schwingen.' : '') + ' Pausiere, um einen Zeitpunkt genau anzuschauen.';
+      } else {
+        const big = S.fa.phi0 > 20;
+        title = big ? 'Grosser Winkel: nicht mehr ganz harmonisch' : 'Kleiner Winkel: harmonische Schwingung';
+        txt = `Die rücktreibende Kraft <span class="m">F<sub>r</sub> = m g sin φ</span> zeigt immer zur Ruhelage. Für kleine Winkel ist <span class="m">sin φ ≈ φ</span>, dann ist die Schwingung harmonisch mit <span class="m">T = 2π √(l/g)</span> = ${fmt(T0(), 2)} s, unabhängig von der Amplitude und der Masse.` +
+          (big ? ` Bei ${fmt(S.fa.phi0)}° ist <span class="m">sin φ</span> merklich kleiner als <span class="m">φ</span>: Die Kraft ist schwächer, das Pendel braucht länger. Die gestrichelte Näherung läuft davon.` : '') + ' Pausiere, um einen Zeitpunkt genau anzuschauen.';
+      }
+    } else {
+      pill = 'Pause'; st = 'end';
+      const rate = S.delta <= w ? S.delta : S.delta - Math.sqrt(S.delta * S.delta - w * w), amp = Math.max(1e-6, S.A0 * Math.exp(-rate * S.t)), vmax = amp * w;
+      const e = energies(S.y, S.v), ek = e.k / Math.max(1e-12, e.k + e.p);
+      const turn = Math.abs(S.v) < 0.1 * vmax, rest = Math.abs(S.y) < 0.1 * amp;
+      const dirY = fe ? (S.y > 0 ? 'oben' : 'unten') : (S.y > 0 ? 'rechts' : 'links');
+      const out = S.y * S.v > 0;
+      title = amp < 0.002 * S.A0 ? 'Die Schwingung ist abgeklungen' : turn ? `Umkehrpunkt ${fe ? (S.y > 0 ? 'oben' : 'unten') : (S.y > 0 ? 'rechts' : 'links')}` : rest ? 'Durch die Ruhelage' : out ? `Weg von der Ruhelage, nach ${dirY}` : 'Zurück zur Ruhelage';
+      if (fe) {
+        const FD = S.fe.D * (shift() - S.y);
+        txt = `<span class="m">x</span> = ${fmt(S.y * 100, 1)} cm, <span class="m">v</span> = ${fmt(S.v, 2)} m/s, <span class="m">a</span> = ${fmt(a, 2)} m/s². Die Federkraft <span class="m">F<sub>D</sub></span> = ${fmt(FD, 2)} N zeigt ${FD > 0.005 ? 'nach oben' : FD < -0.005 ? 'nach unten' : 'nirgends hin, sie ist null'}.` +
+          (turn ? ' Am Umkehrpunkt ist die Geschwindigkeit null, Auslenkung, Kraft und Beschleunigung sind am grössten. Die Beschleunigung zeigt zur Ruhelage.' : rest ? ' In der Ruhelage ist die resultierende Kraft null und die Geschwindigkeit am grössten.' : out ? ' Die Masse wird langsamer, weil die Kraft gegen die Bewegung zeigt.' : ' Die Masse wird schneller, weil die Kraft in Bewegungsrichtung zeigt.') +
+          ` Energie: ${fmt(ek * 100)} % kinetisch, ${fmt((1 - ek) * 100)} % potentiell.`;
+      } else {
+        txt = `<span class="m">φ</span> = ${fmt(S.y * DEG, 1)}°, ${M(D1('φ'))} = ${fmt(S.v, 2)} rad/s, ${M(D2('φ'))} = ${fmt(a, 2)} rad/s².` +
+          (turn ? ' Am Umkehrpunkt steht das Pendel kurz still. Die rücktreibende Kraft ist am grössten.' : rest ? ' In der Ruhelage ist die rücktreibende Kraft null, das Pendel ist am schnellsten.' : out ? ' Das Pendel wird langsamer.' : ' Das Pendel wird schneller.') +
+          ` Energie: ${fmt(ek * 100)} % kinetisch, ${fmt((1 - ek) * 100)} % potentiell.`;
+      }
+    }
+    const key = pill + title + txt;
+    if (key === lastKey) return;
+    lastKey = key;
+    const pe = $('#pill'); pe.textContent = pill; pe.dataset.state = st;
+    $('#eTitle').textContent = title; $('#eText').innerHTML = txt;
+  }
+
+  function writeEq() {
+    const fe = feder(), w = w0(), d = S.delta, wd = Math.sqrt(Math.max(0, w * w - d * d));
+    let h;
+    if (fe) {
+      const A = S.fe.x0, B = S.fe.v0 / w, xm = Math.hypot(A, B), ph = Math.atan2(-B, A);
+      h = `<div class="eq"><span class="term">${M('m ' + D2('x') + ' = F<sub>D</sub> = −D x')}<small>Bewegungsgleichung</small></span></div>
+        <div class="eq"><span class="term">${M(D2('x') + ' = −ω<sub>0</sub>² x')}<small>allgemeine Form</small></span><span class="term">${M('ω<sub>0</sub> = √(D/m)')}<small>Eigenfrequenz</small></span></div>
+        <div class="eq"><span class="term">${M('x(t) = x<sub>max</sub> cos(ω<sub>0</sub> t + φ<sub>0</sub>)')}<small>Lösung</small></span></div>
+        <p class="optnote">Mit den Einstellungen: <span class="m">ω<sub>0</sub></span> = √(${fmt(S.fe.D)} / ${fmt(S.fe.m, 2)}) = ${fmt(w, 2)} 1/s, <span class="m">f</span> = ${fmt(w / (2 * Math.PI), 2)} Hz, <span class="m">T</span> = ${fmt(T0(), 3)} s. Aus den Anfangsbedingungen: <span class="m">x<sub>max</sub></span> = ${fmt(xm * 100, 1)} cm, <span class="m">φ<sub>0</sub></span> = ${fmt(ph * DEG)}°.</p>
+        <div class="eq"><span class="term">${M('v(t) = −x<sub>max</sub> ω<sub>0</sub> sin(ω<sub>0</sub> t + φ<sub>0</sub>)')}<small>Geschwindigkeit</small></span></div>
+        <div class="eq"><span class="term">${M('a(t) = −x<sub>max</sub> ω<sub>0</sub>² cos(ω<sub>0</sub> t + φ<sub>0</sub>) = −ω<sub>0</sub>² x')}<small>Beschleunigung</small></span></div>
+        <div class="eq"><span class="term">${M('E = ½ D x² + ½ m v² = ½ D x<sub>max</sub>² = ½ m v<sub>max</sub>²')}<small>Energie pendelt zwischen Feder und Bewegung</small></span></div>
+        <p class="note">Die Eigenfrequenz <span class="m">ω<sub>0</sub></span> ist durch das Pendel gegeben (<span class="m">D</span> und <span class="m">m</span>). Amplitude <span class="m">x<sub>max</sub></span> und Phase <span class="m">φ<sub>0</sub></span> kommen aus den Anfangsbedingungen.` +
+        (S.fe.grav ? ` Mit Schwerkraft ist <span class="m">x</span> von der neuen Ruhelage aus gemessen. Sie liegt <span class="m">m g/D</span> = ${fmt(shift() * 100, 1)} cm tiefer als das Ende der entspannten Feder. Die Gleichung bleibt gleich.` : '') + '</p>';
+    } else {
+      const p0 = S.fa.phi0 / DEG;
+      h = `<div class="eq"><span class="term">${M('m l ' + D2('φ') + ' = −m g sin φ')}<small>Bewegungsgleichung (Newton II entlang der Bahn)</small></span></div>
+        <div class="eq"><span class="term">${M('sin φ ≈ φ')}<small>kleine Winkel</small></span><span class="term">${M(D2('φ') + ' + (g/l) φ = 0')}<small>harmonisch</small></span></div>
+        <div class="eq"><span class="term">${M('φ(t) = φ<sub>max</sub> cos(ω<sub>0</sub> t)')}<small>Lösung</small></span><span class="term">${M('ω<sub>0</sub> = √(g/l)')}<small>Eigenfrequenz</small></span><span class="term">${M('T = 2π √(l/g)')}<small>Periode</small></span></div>
+        <p class="optnote">Mit den Einstellungen: <span class="m">ω<sub>0</sub></span> = √(${fmt(S.fa.g, 2)} / ${fmt(S.fa.l, 2)}) = ${fmt(w, 2)} 1/s, <span class="m">T</span> = ${fmt(T0(), 3)} s. Für ${fmt(S.fa.phi0)}° ist <span class="m">sin φ / φ</span> = ${fmt(Math.sin(p0) / p0, 3)}.</p>
+        <div class="eq"><span class="term">${M('T ≈ T<sub>0</sub> (1 + φ<sub>max</sub>²/16 + 11 φ<sub>max</sub>⁴/3072)')}<small>ohne Näherung, φ<sub>max</sub> in rad</small></span></div>
+        <div class="eq"><span class="term">${M('E = m g l (1 − cos φ) + ½ m l² ' + D1('φ') + '²')}<small>potentielle und kinetische Energie</small></span></div>
+        <p class="note">Die Periode hängt nur von <span class="m">l</span> und <span class="m">g</span> ab, nicht von der Masse und (für kleine Winkel) nicht von der Amplitude.</p>`;
+    }
+    if (d > 0) h += `<div class="eq"><span class="term">${M((fe ? 'x' : 'φ') + '(t) = ' + (fe ? 'x' : 'φ') + '<sub>max</sub> e<sup>−δt</sup> cos(ω<sub>d</sub> t + φ<sub>0</sub>)')}<small>mit Dämpfung</small></span><span class="term">${M('ω<sub>d</sub> = √(ω<sub>0</sub>² − δ²)')}<small>${d < w ? '= ' + fmt(wd, 2) + ' 1/s' : 'keine Schwingung mehr'}</small></span></div>`;
+    $('#eqBox').innerHTML = h;
+  }
+
+  function writeDgl() {
+    const fe = feder(), w = w0(), q = fe ? 'x' : 'φ';
+    const A = S.y0, B = S.vv0 / w, xm = Math.hypot(A, B), ph = Math.atan2(-B, A);
+    const valA = fe ? fmt(A * 100, 1) + ' cm' : fmt(A * DEG, 1) + '°', valB = fe ? fmt(B * 100, 1) + ' cm' : fmt(B * DEG, 1) + '°';
+    const step = (n, body) => `<div class="step"><span class="num">${n}</span><div>${body}</div></div>`;
+    const eq = (f, s = '') => `<div class="eq"><span class="term">${M(f)}${s ? `<small>${s}</small>` : ''}</span></div>`;
+    let h = `<section class="group" style="border-top:0;padding-top:0" aria-labelledby="h-d1"><h3 id="h-d1">Die Bewegungsgleichung lösen</h3>` +
+      (fe ? '' : `<p class="note">Für das Fadenpendel zuerst nähern: Für kleine Winkel ist <span class="m">sin φ ≈ φ</span>, dann wird <span class="m">m l ${D2('φ')} = −m g sin φ</span> zu <span class="m">${D2('φ')} = −(g/l) φ</span>. Das ist dieselbe Gleichung wie beim Federpendel, mit <span class="m">ω<sub>0</sub>² = g/l</span>. Unten steht <span class="m">φ</span> statt <span class="m">x</span>.</p>`) +
+      step(1, `<p><b>Die Gleichung.</b> Gesucht ist eine Funktion <span class="m">${q}(t)</span>, die zweimal abgeleitet wieder sich selbst ergibt, mal <span class="m">−ω<sub>0</sub>²</span>:</p>${eq(D2(q) + ' = −ω<sub>0</sub>² ' + q)}`) +
+      step(2, `<p><b>Raten (Ansatz).</b> Cosinus und Sinus haben genau diese Eigenschaft. Probiere <span class="m">${q}(t) = cos(ω t)</span> und leite zweimal ab:</p>${eq(D1(q) + ' = −ω sin(ω t)')}${eq(D2(q) + ' = −ω² cos(ω t) = −ω² ' + q)}<p>Das passt, wenn <span class="m">ω = ω<sub>0</sub></span>. Genauso für <span class="m">sin(ω<sub>0</sub> t)</span>.</p>`) +
+      step(3, `<p><b>Allgemeine Lösung.</b> Die Gleichung ist linear: Eine Summe von Lösungen ist wieder eine Lösung. Weil die Gleichung zweite Ableitungen enthält, braucht es zwei freie Konstanten:</p>${eq(q + '(t) = A cos(ω<sub>0</sub> t) + B sin(ω<sub>0</sub> t)')}`) +
+      step(4, `<p><b>Anfangsbedingungen einsetzen.</b> Bei <span class="m">t = 0</span> ist <span class="m">cos 0 = 1</span> und <span class="m">sin 0 = 0</span>:</p>${eq(q + '(0) = A', 'Startauslenkung')}${eq(D1(q) + '(0) = B ω<sub>0</sub>', 'Startgeschwindigkeit')}<p class="optnote">Mit den Einstellungen: <span class="m">A</span> = ${valA}, <span class="m">B</span> = ${fe ? 'v(0)/ω<sub>0</sub>' : '0'} = ${valB}.</p>`) +
+      step(5, `<p><b>Amplitude und Phase.</b> Mit dem Additionstheorem <span class="m">cos(α + β) = cos α cos β − sin α sin β</span> lässt sich die Summe als ein einziger Cosinus schreiben:</p>${eq(q + '(t) = ' + q + '<sub>max</sub> cos(ω<sub>0</sub> t + φ<sub>0</sub>)')}${eq(q + '<sub>max</sub> = √(A² + B²), &nbsp; tan φ<sub>0</sub> = −B/A')}<p class="optnote">Mit den Einstellungen: <span class="m">${q}<sub>max</sub></span> = ${fe ? fmt(xm * 100, 1) + ' cm' : fmt(xm * DEG, 1) + '°'}, <span class="m">φ<sub>0</sub></span> = ${fmt(ph * DEG)}°.</p>`) +
+      step(6, `<p><b>Kontrolle mit der Energie.</b> Einsetzen in die Energie gibt wegen <span class="m">sin² + cos² = 1</span> eine Konstante:</p>${eq(fe ? '½ m v² + ½ D x² = ½ D x<sub>max</sub>²' : '½ m l² ' + D1('φ') + '² + ½ m g l φ² ≈ ½ m g l φ<sub>max</sub>²')}<p>Die Energie pendelt zwischen Bewegung und ${fe ? 'Feder' : 'Höhe'}, die Summe bleibt gleich.</p>`) +
+      '</section>';
+
+    const d = S.delta, disc = d * d - w * w;
+    const caseTxt = d === 0 ? 'Mit den Einstellungen ist δ = 0: ungedämpft, λ = ±iω<sub>0</sub>.'
+      : d < w ? `Mit den Einstellungen: δ = ${fmt(d, 2)} 1/s &lt; ω<sub>0</sub> = ${fmt(w, 2)} 1/s, also schwach gedämpft, ω<sub>d</sub> = ${fmt(Math.sqrt(-disc), 3)} 1/s.`
+        : d === w ? 'Mit den Einstellungen: δ = ω<sub>0</sub>, aperiodischer Grenzfall.' : 'Mit den Einstellungen: δ &gt; ω<sub>0</sub>, Kriechfall.';
+    h += `<section class="group" aria-labelledby="h-d2"><h3 id="h-d2">Allgemeiner: Exponentialansatz, auch mit Dämpfung</h3>
+      <p class="note">Mit einer Reibungskraft proportional zur Geschwindigkeit kommt ein Term mit der ersten Ableitung dazu:</p>
+      ${eq(D2(q) + ' + 2δ ' + D1(q) + ' + ω<sub>0</sub>² ' + q + ' = 0')}
+      <p class="note">Ansatz <span class="m">${q}(t) = e<sup>λt</sup></span>. Jede Ableitung gibt einen Faktor <span class="m">λ</span>, also muss gelten</p>
+      ${eq('λ² + 2δλ + ω<sub>0</sub>² = 0 &nbsp; ⇒ &nbsp; λ = −δ ± √(δ² − ω<sub>0</sub>²)')}
+      <p class="note"><b>Schwach gedämpft</b> (<span class="m">δ &lt; ω<sub>0</sub></span>): Die Wurzel ist imaginär, <span class="m">λ = −δ ± iω<sub>d</sub></span> mit <span class="m">ω<sub>d</sub> = √(ω<sub>0</sub>² − δ²)</span>. Mit <span class="m">e<sup>iθ</sup> = cos θ + i sin θ</span> wird daraus</p>
+      ${eq(q + '(t) = ' + q + '<sub>max</sub> e<sup>−δt</sup> cos(ω<sub>d</sub> t + φ<sub>0</sub>)')}
+      <p class="note">Die Amplitude nimmt exponentiell ab. Die Frequenz <span class="m">ω<sub>d</sub></span> ist etwas kleiner als <span class="m">ω<sub>0</sub></span>, bei schwacher Dämpfung fast gleich. Ohne Dämpfung (<span class="m">δ = 0</span>) erhält man genau die Lösung von oben. Bei <span class="m">δ = ω<sub>0</sub></span> (aperiodischer Grenzfall) und <span class="m">δ &gt; ω<sub>0</sub></span> (Kriechfall) schwingt nichts mehr, die Auslenkung kriecht zurück.</p>
+      <p class="optnote">${caseTxt}</p>
+    </section>`;
+    if (fe) {
+      h += `<section class="group" aria-labelledby="h-d3"><h3 id="h-d3">Mit Schwerkraft</h3>
+        <p class="note">Misst man <span class="m">x</span> vom Ende der entspannten Feder aus (nach oben positiv), lautet Newton II</p>
+        ${eq('m ' + D2('x') + ' = −D x − m g')}
+        <p class="note">In der Ruhelage ist die Kraft null: <span class="m">x<sub>R</sub> = −m g / D</span>. Mit der neuen Koordinate <span class="m">x′ = x − x<sub>R</sub></span> (von der Ruhelage aus) und <span class="m">${D2('x')}′ = ${D2('x')}</span> fällt <span class="m">m g</span> heraus:</p>
+        ${eq('m ' + D2('x') + '′ = −D x′')}
+        <p class="note">Das ist wieder die Gleichung ohne Schwerkraft, mit derselben Eigenfrequenz. Die Schwerkraft verschiebt nur die Ruhelage. In der Animation und im Graphen ist <span class="m">x</span> immer von der Ruhelage aus gemessen.</p>
+      </section>`;
+    } else {
+      const rowsA = [5, 10, 20, 45, 90].map(a => `<tr><th scope="row">${a}°</th><td>${fmt(Math.sin(a / DEG) / (a / DEG) * 100, 2)} %</td></tr>`).join('');
+      h += `<section class="group" aria-labelledby="h-d3"><h3 id="h-d3">Wie gut ist sin φ ≈ φ?</h3>
+        <div class="tablewrap"><table><thead><tr><th scope="col" style="text-align:left">Winkel</th><th scope="col" class="c">sin φ / φ</th></tr></thead><tbody>${rowsA}</tbody></table></div>
+        <p class="note">Bis etwa 20° ist der Fehler kleiner als 2 %. Ohne Näherung hat die Gleichung keine Lösung aus Sinus und Cosinus. Die Periode wird mit grösserem Winkel länger, für 90° um 18 %.</p>
+      </section>`;
+    }
+    $('#dglBox').innerHTML = h;
+  }
+
+  function writeTry() {
+    const fe = feder();
+    const T = fe ? [
+      ['Frage Federpendel: Die Masse ist ganz unten. Was gilt für die Geschwindigkeit <span class="m">v<sub>x</sub></span> und die Federkraft <span class="m">F<sub>x</sub></span>?', 'd) <span class="m">v<sub>x</sub> = 0</span> und <span class="m">F<sub>x</sub> &gt; 0</span>. Pausiere die Animation, wenn die Masse ganz unten ist: Der Geschwindigkeitspfeil verschwindet, die Federkraft zeigt nach oben und ist am grössten. Im Graphen von <span class="m">v(t)</span> ist dort ein Nulldurchgang, im Graphen von <span class="m">a(t)</span> ein Maximum.'],
+      ['Frage horizontales und vertikales Pendel: Schalte die Schwerkraft aus und ein. Was ändert sich?', 'Nur die Ruhelage, nicht die Periode. Richtig sind A) und C): Beide schwingen mit derselben Frequenz, beide erfüllen <span class="m">' + D2('x') + ' = −ω<sub>0</sub>² x</span>. B) ist falsch, ohne Dämpfung schwingen beide unendlich weiter.'],
+      ['Stelle eine Dämpfung ein. Wird die Periode kleiner?', 'Die Amplitude nimmt ab, die Periode bleibt bei schwacher Dämpfung fast gleich (genau: etwas länger, <span class="m">ω<sub>d</sub> = √(ω<sub>0</sub>² − δ²)</span>). Vergleiche „Periode gemessen“ in der Tabelle. Aussage D) ist darum falsch.'],
+      ['Blende x und v zusammen ein. Wie liegen die beiden Kurven zueinander?', 'Sie sind um eine Viertelperiode verschoben. Wo <span class="m">x</span> maximal ist (Umkehrpunkt), ist <span class="m">v = 0</span>. Wo <span class="m">x</span> durch null geht, ist <span class="m">|v|</span> maximal. Mit <span class="m">a</span> dazu sieht man: <span class="m">a</span> ist genau gegenläufig zu <span class="m">x</span>, denn <span class="m">a = −ω<sub>0</sub>² x</span>.'],
+      ['Vervierfache die Masse. Was passiert mit der Periode?', 'Sie verdoppelt sich: <span class="m">T = 2π √(m/D)</span>.'],
+      ['Setze <span class="m">x(0) = 0</span> und <span class="m">v(0)</span> = 0.5 m/s. Was ändert sich am Graphen?', 'Die Kurve beginnt in der Ruhelage und ist ein Sinus statt eines Cosinus (Phase −90°). Die Periode bleibt gleich, die Amplitude ist <span class="m">v(0)/ω<sub>0</sub></span>. Amplitude und Phase kommen aus den Anfangsbedingungen, die Frequenz aus dem Pendel.'],
+      ['Blende im Graphen x und E zusammen ein. Wann ist die kinetische Energie am grössten?', 'In der Ruhelage, wo <span class="m">x = 0</span> ist. An den Umkehrpunkten ist alles potentielle Energie. Die Energien schwingen doppelt so schnell wie <span class="m">x</span>, die Summe bleibt konstant.'],
+    ] : [
+      ['Frage Fadenpendel: Ein Pendel braucht für eine Schwingung mit 1 cm Amplitude etwa 2 s. Wie lange braucht es mit 2 cm?', 'a) 2 s. Die Periode hängt bei kleinen Winkeln nur von <span class="m">l</span> und <span class="m">g</span> ab. Probiere 2° und 4°: Die gemessene Periode ist gleich.'],
+      ['Stelle den Startwinkel auf 60° oder 90°. Stimmt die Formel noch?', 'Nicht mehr genau. Die gemessene Periode ist länger als <span class="m">2π √(l/g)</span>, und die gestrichelte Kleinwinkel-Lösung läuft davon. Die Kraft <span class="m">m g sin φ</span> ist dann kleiner als <span class="m">m g φ</span>.'],
+      ['Ändere die Masse. Was passiert mit der Periode?', 'Nichts. Masse kürzt sich heraus: <span class="m">m l ' + D2('φ') + ' = −m g sin φ</span>. Nur die Energie wird grösser.'],
+      ['Vervierfache die Fadenlänge.', 'Die Periode verdoppelt sich: <span class="m">T = 2π √(l/g)</span>. Ein Pendel mit <span class="m">T</span> = 2 s ist etwa 1 m lang.'],
+      ['Gehe auf den Mond.', 'Dort ist <span class="m">g</span> etwa sechsmal kleiner, das Pendel schwingt √6 ≈ 2.5-mal langsamer.'],
+      ['Blende φ und E zusammen ein. Wo ist die kinetische Energie am grössten?', 'Ganz unten, in der Ruhelage. An den Umkehrpunkten ist alles potentielle Energie <span class="m">m g h</span>.'],
+    ];
+    $('#tryBox').innerHTML = T.map(([q, a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('');
+    $('#foot').innerHTML = fe
+      ? 'Die Feder ist masselos, die Masse ein Punkt. <span class="m">x</span> ist von der Ruhelage aus gemessen, nach oben positiv. Die Pfeile zeigen Federkraft (orange), Gewichtskraft (rot) und Geschwindigkeit (grün). Die Animation ist nicht massstäblich: Die Auslenkung ist so vergrössert, dass sie die Höhe des Graphen füllt. Gerechnet wird mit dem Runge-Kutta-Verfahren in Schritten von 0.5 ms.'
+      : 'Masseloser Faden, die Masse ein Punkt. Gerechnet wird mit der vollständigen Gleichung (mit <span class="m">sin φ</span>), mit dem Runge-Kutta-Verfahren in Schritten von 0.5 ms. Die Pfeile zeigen die rücktreibende Kraft (rot) und die Geschwindigkeit (grün).';
+  }
+
+  /* ---------- inputs ---------- */
+  const bind = (id, obj, key, f = v => v) => $('#' + id).addEventListener('input', e => { S[obj][key] = f(+e.target.value); reset(); });
+  bind('fm', 'fe', 'm'); bind('fD', 'fe', 'D'); bind('fx0', 'fe', 'x0'); bind('fv0', 'fe', 'v0');
+  bind('pl', 'fa', 'l'); bind('pa', 'fa', 'phi0'); bind('pg', 'fa', 'g'); bind('pm', 'fa', 'm');
+  $('#fg').addEventListener('change', e => { S.fe.grav = e.target.checked; reset(); });
+  $('#dd').addEventListener('input', e => { S.zeta = +e.target.value; reset(); });
+  $$('[data-dz]').forEach(b => b.addEventListener('click', () => { S.zeta = +b.dataset.dz; $('#dd').value = S.zeta; reset(); }));
+  $$('[data-pg]').forEach(b => b.addEventListener('click', () => { S.fa.g = +b.dataset.pg; $('#pg').value = S.fa.g; reset(); }));
+  $$('input[name="tempo"]').forEach(r => r.addEventListener('change', () => { S.tempo = +r.value; }));
+  [['sPen', 'pen'], ['sSol', 'sol'], ['sF', 'F'], ['sV', 'V']].forEach(([id, k]) => $('#' + id).addEventListener('change', e => { S.show[k] = e.target.checked; dirty = true; updateUI(true); }));
+  $('#defaults').addEventListener('click', () => {
+    S.fe = { ...DEF.fe }; S.fa = { ...DEF.fa }; S.zeta = 0;
+    for (const [id, v] of [['fm', 0.5], ['fD', 20], ['fx0', 0.1], ['fv0', 0], ['pl', 1], ['pa', 10], ['pg', 9.81], ['pm', 0.2], ['dd', 0]]) $('#' + id).value = v;
+    $('#fg').checked = true;
+    reset();
+  });
+  $$('[data-mode]').forEach(b => b.addEventListener('click', () => {
+    S.mode = b.dataset.mode;
+    $$('[data-mode]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    buildGsel(); resetSteady(); reset();
+  }));
+  $$('[data-ptab]').forEach(b => b.addEventListener('click', () => {
+    const d = b.dataset.ptab === 'dgl';
+    $$('[data-ptab]').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    $('#tabMain').hidden = d; $('#tabDgl').hidden = !d;
+  }));
+  function syncPlay() {
+    const b = $('#playBtn');
+    b.querySelector('.i-pause').toggleAttribute('hidden', !S.run); b.querySelector('.i-play').toggleAttribute('hidden', S.run);
+    b.title = S.run ? 'Pause' : 'Start'; b.setAttribute('aria-label', b.title);
+  }
+  $('#playBtn').addEventListener('click', () => { S.run = !S.run; syncPlay(); dirty = true; explain(); });
+  $('#resetBtn').addEventListener('click', () => reset());
+
+  /* ---------- full screen ---------- */
+  let fsWrap = null;
+  function setFsIcons() {
+    const b = $('#fullBtn'), on = !!fsWrap;
+    b.querySelector('.i-full').toggleAttribute('hidden', on); b.querySelector('.i-exit').toggleAttribute('hidden', !on);
+    b.title = on ? 'Vollbild beenden' : 'Vollbild'; b.setAttribute('aria-label', b.title);
+    document.body.classList.toggle('fs-open', !!fsWrap && fsWrap.classList.contains('fs'));
+    dirty = true;
+  }
+  function exitFs() {
+    if (!fsWrap) return;
+    if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    fsWrap.classList.remove('fs'); fsWrap = null; setFsIcons();
+  }
+  $('#fullBtn').addEventListener('click', () => {
+    const wrap = $('#fullBtn').closest('.stagewrap');
+    if (fsWrap) { exitFs(); return; }
+    fsWrap = wrap;
+    const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+    const fallback = () => { wrap.classList.add('fs'); setFsIcons(); };
+    if (req) { try { const r = req.call(wrap); if (r && r.catch) r.catch(fallback); } catch (e) { fallback(); } } else fallback();
+    setFsIcons();
+  });
+  const fsChange = () => { if (!document.fullscreenElement && !document.webkitFullscreenElement && fsWrap && !fsWrap.classList.contains('fs')) fsWrap = null; setFsIcons(); };
+  document.addEventListener('fullscreenchange', fsChange); document.addEventListener('webkitfullscreenchange', fsChange);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && fsWrap && fsWrap.classList.contains('fs')) exitFs(); });
+
+  /* ---------- the explanation box only grows, so nothing below it jumps ---------- */
+  const steady = new Map();
+  function resetSteady() { for (const el of $$('.explain')) { el.style.minHeight = ''; steady.set(el, 0); } }
+  const mo = new MutationObserver(list => {
+    for (const m of list) {
+      const el = (m.target.closest ? m.target : m.target.parentElement).closest('.explain');
+      if (!el) continue;
+      const hh = el.offsetHeight;
+      if (hh > (steady.get(el) || 0)) { steady.set(el, hh); el.style.minHeight = hh + 'px'; }
+    }
+  });
+  $$('.explain').forEach(el => mo.observe(el, { childList: true, subtree: true, characterData: true }));
+  let lastW = innerWidth;
+  addEventListener('resize', () => { if (innerWidth !== lastW) { lastW = innerWidth; resetSteady(); } });
+
+  /* ---------- QR code ---------- */
+  const qr = $('#qr'), qrUrl = $('#qrUrl');
+  let qrOpener = null;
+  function defaultUrl() {
+    let framed = true;
+    try { framed = window.top !== window.self; } catch (e) { /* cross-origin frame */ }
+    if (!framed && /^https?:$/.test(location.protocol)) return location.href.split('#')[0];
+    try { const v = localStorage.getItem('uebung10-qr-url'); if (v) return v; } catch (e) { /* storage blocked */ }
+    return SHARE_URL;
+  }
+  function renderQR() {
+    const box = $('#qrCode'), url = qrUrl.value.trim();
+    box.textContent = '';
+    $('#qrUrlText').textContent = url;
+    const msg = t => { const p = document.createElement('p'); p.textContent = t; box.append(p); };
+    if (!url) { msg('Gib unten die Adresse ein, unter der diese Seite erreichbar ist.'); return; }
+    if (typeof qrcode !== 'function') { msg('Der QR-Generator konnte nicht geladen werden. Prüfe die Internetverbindung und öffne das Fenster erneut.'); return; }
+    let q;
+    try { q = qrcode(0, 'M'); q.addData(url); q.make(); } catch (e) { msg('Diese Adresse ist zu lang für einen QR-Code.'); return; }
+    const n = q.getModuleCount(), quiet = 3, cells = n + 2 * quiet, px = Math.max(4, Math.floor(720 / cells));
+    const c = document.createElement('canvas');
+    c.width = c.height = cells * px;
+    c.setAttribute('role', 'img'); c.setAttribute('aria-label', 'QR-Code für ' + url);
+    const g = c.getContext('2d'), cs = getComputedStyle(document.documentElement);
+    g.fillStyle = cs.getPropertyValue('--qr-bg').trim(); g.fillRect(0, 0, c.width, c.height);
+    g.fillStyle = cs.getPropertyValue('--qr-ink').trim();
+    for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (q.isDark(r, k)) g.fillRect((k + quiet) * px, (r + quiet) * px, px, px);
+    box.append(c);
+  }
+  function openQR() {
+    qrOpener = document.activeElement;
+    if (!qrUrl.value) qrUrl.value = defaultUrl();
+    qr.hidden = false; renderQR();
+    if (typeof qrcode !== 'function') setTimeout(renderQR, 1200);
+    $('#qrClose').focus();
+  }
+  function closeQR() { qr.hidden = true; if (qrOpener) qrOpener.focus(); }
+  $('#qrBtn').addEventListener('click', openQR);
+  $('#qrClose').addEventListener('click', closeQR);
+  qr.addEventListener('click', e => { if (e.target === qr) closeQR(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !qr.hidden) closeQR(); });
+  qrUrl.addEventListener('input', () => { renderQR(); try { localStorage.setItem('uebung10-qr-url', qrUrl.value.trim()); } catch (e) { /* storage blocked */ } });
+
+  /* ---------- start ---------- */
+  readColors();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
+  new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { dirty = true; });
+  new ResizeObserver(() => { dirty = true; }).observe(document.body);
+  if (location.hash === '#fadenpendel') { S.mode = 'faden'; $$('[data-mode]').forEach(x => x.setAttribute('aria-selected', String(x.dataset.mode === 'faden'))); }
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) S.run = false;
+  buildGsel(); reset(); syncPlay();
+
+  let last = performance.now(), lastUI = 0;
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (S.run) step(dt * S.tempo);
+    if (dirty) { draw(); dirty = false; }
+    if (now - lastUI > 120) { updateUI(false); lastUI = now; }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
